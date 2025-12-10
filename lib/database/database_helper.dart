@@ -1,7 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -20,7 +19,8 @@ class DatabaseHelper {
     final path = join(dbPath.path, filePath);
     return await openDatabase(
       path,
-      version: 2, // Increment version to trigger migration
+      // Increment version to trigger migration
+      version: 2,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -91,7 +91,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Task-Tag relationship (many-to-many)
+    // Task-Tag relationship
     await db.execute('''
       CREATE TABLE task_tags (
         task_id $textType,
@@ -102,7 +102,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Habit-Tag relationship (many-to-many)
+    // Habit-Tag relationship
     await db.execute('''
       CREATE TABLE habit_tags (
         habit_id $textType,

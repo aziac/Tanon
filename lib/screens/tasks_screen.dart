@@ -403,8 +403,9 @@ class _TasksScreenState extends State<TasksScreen> {
                                                   name: 'Unknown',
                                                   createdAt: DateTime.now()),
                                             );
-                                            if (tag.id.isEmpty)
+                                            if (tag.id.isEmpty) {
                                               return const SizedBox.shrink();
+                                            }
 
                                             final tagColor = tag.color != null
                                                 ? Color(int.parse(

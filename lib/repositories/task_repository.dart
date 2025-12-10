@@ -1,7 +1,7 @@
-import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/task.dart';
 
+// Business logic for interacting with database
 class TaskRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
@@ -108,7 +108,6 @@ class TaskRepository {
       whereArgs: [task.id],
     );
 
-    // Update tags
     await db.delete('task_tags', where: 'task_id = ?', whereArgs: [task.id]);
     if (task.tagIds != null && task.tagIds!.isNotEmpty) {
       for (var tagId in task.tagIds!) {

@@ -1,7 +1,7 @@
-import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/tag.dart';
 
+// Business logic for interacting with database
 class TagRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
@@ -22,7 +22,7 @@ class TagRepository {
     final tagMap = {for (var tag in allTags) tag.id: tag};
     final rootTags = <Tag>[];
 
-    // Build hierarchy
+    // Create hiearchy system for tags
     for (var tag in allTags) {
       if (tag.parentId == null) {
         rootTags.add(tag);

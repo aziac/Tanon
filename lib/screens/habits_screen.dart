@@ -233,7 +233,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                             if (titleController.text.isNotEmpty &&
                                 selectedDays.isNotEmpty) {
                               DateTime? start, end;
-                              // Create DateTime from TimeOfDay if times are set
+                              // Create if times are set
                               if (startTime != null) {
                                 final now = DateTime.now();
                                 start = DateTime(now.year, now.month, now.day,
@@ -443,9 +443,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
                                                       createdAt:
                                                           DateTime.now()),
                                                 );
-                                                if (tag.id.isEmpty)
+                                                if (tag.id.isEmpty) {
                                                   return const SizedBox
                                                       .shrink();
+                                                }
 
                                                 final tagColor = tag.color !=
                                                         null

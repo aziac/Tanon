@@ -35,7 +35,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() => _isLoading = true);
     _tasksForDay = await _taskRepo.getByDate(day);
 
-    // Get all habits and filter by selected day
     final allHabits = await _habitRepo.getAll();
     final dayOfWeek = day.weekday % 7; // Convert to 0-6 (Sunday-Saturday)
     _habitsForDay = allHabits
@@ -49,7 +48,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   List<dynamic> _getSortedItems() {
     final items = <dynamic>[..._tasksForDay, ..._habitsForDay];
 
-    // Sort by start time, comparing only hours and minutes (not date)
+    // Sort by start time
     items.sort((a, b) {
       final aTime = a is Task ? a.startTime : (a as Habit).startTime;
       final bTime = b is Task ? b.startTime : (b as Habit).startTime;
@@ -58,7 +57,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (aTime == null) return 1;
       if (bTime == null) return -1;
 
-      // Compare only hours and minutes, ignore the date part
+      // Try comparing minutes
       final aMinutes = aTime.hour * 60 + aTime.minute;
       final bMinutes = bTime.hour * 60 + bTime.minute;
 

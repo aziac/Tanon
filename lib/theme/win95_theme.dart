@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Win95Theme {
-  // Classic Windows 95 colors
+  // Windows 95 colors
   static const Color buttonFace = Color(0xFFC0C0C0);
   static const Color buttonHighlight = Color(0xFFFFFFFF);
   static const Color buttonShadow = Color(0xFF808080);

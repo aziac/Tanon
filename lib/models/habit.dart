@@ -38,19 +38,16 @@ class Habit {
 
     // Handle migration from old format (daily/weekly) to new format (comma-separated days)
     if (frequencyStr == 'daily') {
-      selectedDays = [0, 1, 2, 3, 4, 5, 6]; // All days
+      selectedDays = [0, 1, 2, 3, 4, 5, 6];
     } else if (frequencyStr == 'weekly') {
-      // Default to weekdays for old "weekly" habits
-      selectedDays = [1, 2, 3, 4, 5]; // Mon-Fri
+      selectedDays = [1, 2, 3, 4, 5];
     } else if (frequencyStr.isEmpty) {
       selectedDays = [];
     } else {
-      // New format: comma-separated day indices
       try {
         selectedDays =
             frequencyStr.split(',').map((e) => int.parse(e.trim())).toList();
       } catch (e) {
-        // If parsing fails, default to all days
         selectedDays = [0, 1, 2, 3, 4, 5, 6];
       }
     }

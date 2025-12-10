@@ -1,7 +1,7 @@
-import 'package:sqflite/sqflite.dart';
 import '../database/database_helper.dart';
 import '../models/habit.dart';
 
+// Business logic for interacting with database
 class HabitRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
@@ -83,7 +83,6 @@ class HabitRepository {
     return await db.delete('habits', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Habit Completions
   Future<String> addCompletion(HabitCompletion completion) async {
     final db = await _dbHelper.database;
     await db.insert('habit_completions', completion.toMap());
