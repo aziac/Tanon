@@ -49,7 +49,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   List<dynamic> _getSortedItems() {
     final items = <dynamic>[..._tasksForDay, ..._habitsForDay];
 
-    // Sort by start time, with items without times at the end
+    // Sort by start time, comparing only hours and minutes (not date)
     items.sort((a, b) {
       final aTime = a is Task ? a.startTime : (a as Habit).startTime;
       final bTime = b is Task ? b.startTime : (b as Habit).startTime;
@@ -58,7 +58,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (aTime == null) return 1;
       if (bTime == null) return -1;
 
-      return aTime.compareTo(bTime);
+      // Compare only hours and minutes, ignore the date part
+      final aMinutes = aTime.hour * 60 + aTime.minute;
+      final bMinutes = bTime.hour * 60 + bTime.minute;
+
+      return aMinutes.compareTo(bMinutes);
     });
 
     return items;
