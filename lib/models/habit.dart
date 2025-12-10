@@ -3,6 +3,8 @@ class Habit {
   final String title;
   final String? description;
   final List<int> selectedDays; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  final DateTime? startTime;
+  final DateTime? endTime;
   final DateTime createdAt;
   List<String>? tagIds;
 
@@ -11,6 +13,8 @@ class Habit {
     required this.title,
     this.description,
     required this.selectedDays,
+    this.startTime,
+    this.endTime,
     required this.createdAt,
     this.tagIds,
   });
@@ -23,6 +27,8 @@ class Habit {
       'frequency': selectedDays.join(','), // Store as comma-separated string
       'target_days': selectedDays.length,
       'created_at': createdAt.toIso8601String(),
+      'start_time': startTime?.toIso8601String(),
+      'end_time': endTime?.toIso8601String(),
     };
   }
 
@@ -54,6 +60,9 @@ class Habit {
       title: map['title'],
       description: map['description'],
       selectedDays: selectedDays,
+      startTime:
+          map['start_time'] != null ? DateTime.parse(map['start_time']) : null,
+      endTime: map['end_time'] != null ? DateTime.parse(map['end_time']) : null,
       createdAt: DateTime.parse(map['created_at']),
     );
   }
@@ -63,6 +72,8 @@ class Habit {
     String? title,
     String? description,
     List<int>? selectedDays,
+    DateTime? startTime,
+    DateTime? endTime,
     DateTime? createdAt,
     List<String>? tagIds,
   }) {
@@ -71,6 +82,8 @@ class Habit {
       title: title ?? this.title,
       description: description ?? this.description,
       selectedDays: selectedDays ?? this.selectedDays,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
       createdAt: createdAt ?? this.createdAt,
       tagIds: tagIds ?? this.tagIds,
     );

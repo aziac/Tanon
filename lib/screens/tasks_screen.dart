@@ -388,6 +388,52 @@ class _TasksScreenState extends State<TasksScreen> {
                                             fontSize: 11,
                                             color: Colors.black54),
                                       ),
+                                    if (task.tagIds != null &&
+                                        task.tagIds!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Wrap(
+                                          spacing: 4,
+                                          runSpacing: 4,
+                                          children: task.tagIds!.map((tagId) {
+                                            final tag = _allTags.firstWhere(
+                                              (t) => t.id == tagId,
+                                              orElse: () => Tag(
+                                                  id: '',
+                                                  name: 'Unknown',
+                                                  createdAt: DateTime.now()),
+                                            );
+                                            if (tag.id.isEmpty)
+                                              return const SizedBox.shrink();
+
+                                            final tagColor = tag.color != null
+                                                ? Color(int.parse(
+                                                        tag.color!.substring(1),
+                                                        radix: 16) +
+                                                    0xFF000000)
+                                                : Win95Theme.buttonShadow;
+
+                                            return Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: tagColor,
+                                                border: Border.all(
+                                                    color: Colors.black,
+                                                    width: 1),
+                                              ),
+                                              child: Text(
+                                                tag.name,
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.white),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),

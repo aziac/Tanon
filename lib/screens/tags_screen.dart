@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:uuid/uuid.dart';
 import '../models/tag.dart';
 import '../repositories/tag_repository.dart';
 import '../theme/win95_theme.dart';
 import '../widgets/win95_widgets.dart';
-
-// Call this from initState of any screen, for example:
-// @override
-// void initState() {
-//   super.initState();
-//   cleanupOrphanedTags();
-// }
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({super.key});
@@ -43,58 +35,111 @@ class _TagsScreenState extends State<TagsScreen> {
     final titleController = TextEditingController();
     String selectedColor = '#808080';
 
+    final availableColors = [
+      {'name': 'Gray', 'value': '#808080'},
+      {'name': 'Red', 'value': '#FF0000'},
+      {'name': 'Green', 'value': '#00AA00'},
+      {'name': 'Blue', 'value': '#0000FF'},
+      {'name': 'Yellow', 'value': '#FFFF00'},
+      {'name': 'Purple', 'value': '#AA00AA'},
+      {'name': 'Orange', 'value': '#FF8800'},
+      {'name': 'Pink', 'value': '#FF00FF'},
+      {'name': 'Teal', 'value': '#008080'},
+      {'name': 'Brown', 'value': '#804000'},
+    ];
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Win95Theme.windowBackground,
-        child: Win95Panel(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: 350,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  parentName != null
-                      ? 'New Sub-tag under "$parentName"'
-                      : 'New Tag',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                const Text('Tag Name:'),
-                const SizedBox(height: 4),
-                Win95TextField(controller: titleController),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Win95Button(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Win95Theme.windowBackground,
+          child: Win95Panel(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: 350,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    parentName != null
+                        ? 'New Sub-tag under "$parentName"'
+                        : 'New Tag',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Tag Name:'),
+                  const SizedBox(height: 4),
+                  Win95TextField(controller: titleController),
+                  const SizedBox(height: 12),
+                  const Text('Color:'),
+                  const SizedBox(height: 4),
+                  Win95Panel(
+                    inset: true,
+                    padding: const EdgeInsets.all(8),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: availableColors.map((colorInfo) {
+                        final isSelected = selectedColor == colorInfo['value'];
+                        return GestureDetector(
+                          onTap: () => setDialogState(
+                              () => selectedColor = colorInfo['value']!),
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Color(int.parse(
+                                      colorInfo['value']!.substring(1),
+                                      radix: 16) +
+                                  0xFF000000),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.black
+                                    : Win95Theme.buttonShadow,
+                                width: isSelected ? 3 : 1,
+                              ),
+                            ),
+                            child: isSelected
+                                ? const Icon(Icons.check,
+                                    color: Colors.white, size: 30)
+                                : null,
+                          ),
+                        );
+                      }).toList(),
                     ),
-                    const SizedBox(width: 8),
-                    Win95Button(
-                      onPressed: () async {
-                        if (titleController.text.isNotEmpty) {
-                          final tag = Tag(
-                            id: _uuid.v4(),
-                            name: titleController.text,
-                            parentId: parentId,
-                            color: selectedColor,
-                            createdAt: DateTime.now(),
-                          );
-                          await _tagRepo.create(tag);
-                          Navigator.pop(context);
-                          _loadTags();
-                        }
-                      },
-                      child: const Text('Create'),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Win95Button(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      Win95Button(
+                        onPressed: () async {
+                          if (titleController.text.isNotEmpty) {
+                            final tag = Tag(
+                              id: _uuid.v4(),
+                              name: titleController.text,
+                              parentId: parentId,
+                              color: selectedColor,
+                              createdAt: DateTime.now(),
+                            );
+                            await _tagRepo.create(tag);
+                            Navigator.pop(context);
+                            _loadTags();
+                          }
+                        },
+                        child: const Text('Create'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -103,6 +148,10 @@ class _TagsScreenState extends State<TagsScreen> {
   }
 
   Widget _buildTagTree(Tag tag, int depth) {
+    final tagColor = tag.color != null
+        ? Color(int.parse(tag.color!.substring(1), radix: 16) + 0xFF000000)
+        : Win95Theme.buttonShadow;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -117,6 +166,15 @@ class _TagsScreenState extends State<TagsScreen> {
                     padding: EdgeInsets.only(right: 8),
                     child: Icon(Icons.subdirectory_arrow_right, size: 16),
                   ),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: tagColor,
+                    border: Border.all(color: Colors.black, width: 1),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     tag.name,

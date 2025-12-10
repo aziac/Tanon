@@ -18,7 +18,20 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getApplicationDocumentsDirectory();
     final path = join(dbPath.path, filePath);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2, // Increment version to trigger migration
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add start_time and end_time columns to habits table
+      await db.execute('ALTER TABLE habits ADD COLUMN start_time TEXT');
+      await db.execute('ALTER TABLE habits ADD COLUMN end_time TEXT');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -62,6 +75,8 @@ class DatabaseHelper {
         description TEXT,
         frequency $textType,
         target_days $intType,
+        start_time TEXT,
+        end_time TEXT,
         created_at $textType
       )
     ''');

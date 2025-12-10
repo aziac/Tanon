@@ -45,6 +45,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() => _isLoading = false);
   }
 
+  // Combined item class to sort tasks and habits together
+  List<dynamic> _getSortedItems() {
+    final items = <dynamic>[..._tasksForDay, ..._habitsForDay];
+
+    // Sort by start time, with items without times at the end
+    items.sort((a, b) {
+      final aTime = a is Task ? a.startTime : (a as Habit).startTime;
+      final bTime = b is Task ? b.startTime : (b as Habit).startTime;
+
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+
+      return aTime.compareTo(bTime);
+    });
+
+    return items;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -114,187 +133,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       : (_tasksForDay.isEmpty && _habitsForDay.isEmpty)
                           ? const Center(
                               child: Text('No tasks or habits for this day'))
-                          : ListView(
-                              children: [
-                                // Tasks
-                                ..._tasksForDay.map((task) {
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    child: Win95Panel(
-                                      padding: const EdgeInsets.all(8),
-                                      inset: true,
-                                      child: Row(
-                                        children: [
-                                          Win95Checkbox(
-                                            value: task.isCompleted,
-                                            onChanged: (val) async {
-                                              final updated = task.copyWith(
-                                                isCompleted: val ?? false,
-                                                completedAt: val == true
-                                                    ? DateTime.now()
-                                                    : null,
-                                              );
-                                              await _taskRepo.update(updated);
-                                              _loadDataForDay(_selectedDay!);
-                                            },
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  task.title,
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.bold,
-                                                    decoration: task.isCompleted
-                                                        ? TextDecoration
-                                                            .lineThrough
-                                                        : null,
-                                                  ),
-                                                ),
-                                                if (task.startTime != null &&
-                                                    task.endTime != null)
-                                                  Text(
-                                                    '${TimeOfDay.fromDateTime(task.startTime!).format(context)} - ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
-                                                    style: const TextStyle(
-                                                        fontSize: 11,
-                                                        color: Colors.black54),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                          // Move to next day button
-                                          IconButton(
-                                            icon: const Icon(
-                                                Icons.arrow_forward,
-                                                size: 16),
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            onPressed: () async {
-                                              final nextDay = _selectedDay!
-                                                  .add(const Duration(days: 1));
-                                              DateTime? newStart, newEnd;
+                          : ListView.builder(
+                              itemCount: _getSortedItems().length,
+                              itemBuilder: (context, index) {
+                                final item = _getSortedItems()[index];
 
-                                              if (task.startTime != null) {
-                                                final startTime =
-                                                    TimeOfDay.fromDateTime(
-                                                        task.startTime!);
-                                                newStart = DateTime(
-                                                  nextDay.year,
-                                                  nextDay.month,
-                                                  nextDay.day,
-                                                  startTime.hour,
-                                                  startTime.minute,
-                                                );
-                                              }
-
-                                              if (task.endTime != null) {
-                                                final endTime =
-                                                    TimeOfDay.fromDateTime(
-                                                        task.endTime!);
-                                                newEnd = DateTime(
-                                                  nextDay.year,
-                                                  nextDay.month,
-                                                  nextDay.day,
-                                                  endTime.hour,
-                                                  endTime.minute,
-                                                );
-                                              }
-
-                                              final updated = task.copyWith(
-                                                dueDate: nextDay,
-                                                startTime: newStart,
-                                                endTime: newEnd,
-                                              );
-                                              await _taskRepo.update(updated);
-                                              _loadDataForDay(_selectedDay!);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }),
-                                // Habits
-                                ..._habitsForDay.map((habit) {
-                                  return FutureBuilder<bool>(
-                                    future: _habitRepo.isCompletedOnDate(
-                                        habit.id, _selectedDay!),
-                                    builder: (context, snapshot) {
-                                      final isCompletedToday =
-                                          snapshot.data ?? false;
-
-                                      return Container(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 8),
-                                        child: Win95Panel(
-                                          padding: const EdgeInsets.all(8),
-                                          inset: true,
-                                          child: Row(
-                                            children: [
-                                              Win95Checkbox(
-                                                value: isCompletedToday,
-                                                onChanged: (val) async {
-                                                  if (val == true) {
-                                                    final completion =
-                                                        HabitCompletion(
-                                                      id: DateTime.now()
-                                                          .millisecondsSinceEpoch
-                                                          .toString(),
-                                                      habitId: habit.id,
-                                                      completedDate:
-                                                          _selectedDay!,
-                                                    );
-                                                    await _habitRepo
-                                                        .addCompletion(
-                                                            completion);
-                                                  } else {
-                                                    await _habitRepo
-                                                        .deleteCompletion(
-                                                            habit.id,
-                                                            _selectedDay!);
-                                                  }
-                                                  setState(() {});
-                                                },
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      habit.title,
-                                                      style: const TextStyle(
-                                                        fontSize: 13,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      'Habit - ${habit.getFrequencyDisplay()}',
-                                                      style: const TextStyle(
-                                                          fontSize: 11,
-                                                          color:
-                                                              Colors.black54),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const Icon(Icons.repeat,
-                                                  size: 16,
-                                                  color: Colors.black54),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                }),
-                              ],
+                                if (item is Task) {
+                                  return _buildTaskItem(item);
+                                } else {
+                                  return _buildHabitItem(item as Habit);
+                                }
+                              },
                             ),
                 ),
               ],
@@ -302,6 +151,158 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTaskItem(Task task) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Win95Panel(
+        padding: const EdgeInsets.all(8),
+        inset: true,
+        child: Row(
+          children: [
+            Win95Checkbox(
+              value: task.isCompleted,
+              onChanged: (val) async {
+                final updated = task.copyWith(
+                  isCompleted: val ?? false,
+                  completedAt: val == true ? DateTime.now() : null,
+                );
+                await _taskRepo.update(updated);
+                _loadDataForDay(_selectedDay!);
+              },
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      decoration:
+                          task.isCompleted ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  if (task.startTime != null && task.endTime != null)
+                    Text(
+                      '${TimeOfDay.fromDateTime(task.startTime!).format(context)} - ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
+                      style:
+                          const TextStyle(fontSize: 11, color: Colors.black54),
+                    ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () async {
+                final nextDay = _selectedDay!.add(const Duration(days: 1));
+                DateTime? newStart, newEnd;
+
+                if (task.startTime != null) {
+                  final startTime = TimeOfDay.fromDateTime(task.startTime!);
+                  newStart = DateTime(
+                    nextDay.year,
+                    nextDay.month,
+                    nextDay.day,
+                    startTime.hour,
+                    startTime.minute,
+                  );
+                }
+
+                if (task.endTime != null) {
+                  final endTime = TimeOfDay.fromDateTime(task.endTime!);
+                  newEnd = DateTime(
+                    nextDay.year,
+                    nextDay.month,
+                    nextDay.day,
+                    endTime.hour,
+                    endTime.minute,
+                  );
+                }
+
+                final updated = task.copyWith(
+                  dueDate: nextDay,
+                  startTime: newStart,
+                  endTime: newEnd,
+                );
+                await _taskRepo.update(updated);
+                _loadDataForDay(_selectedDay!);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHabitItem(Habit habit) {
+    return FutureBuilder<bool>(
+      future: _habitRepo.isCompletedOnDate(habit.id, _selectedDay!),
+      builder: (context, snapshot) {
+        final isCompletedToday = snapshot.data ?? false;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: Win95Panel(
+            padding: const EdgeInsets.all(8),
+            inset: true,
+            child: Row(
+              children: [
+                Win95Checkbox(
+                  value: isCompletedToday,
+                  onChanged: (val) async {
+                    if (val == true) {
+                      final completion = HabitCompletion(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        habitId: habit.id,
+                        completedDate: _selectedDay!,
+                      );
+                      await _habitRepo.addCompletion(completion);
+                    } else {
+                      await _habitRepo.deleteCompletion(
+                          habit.id, _selectedDay!);
+                    }
+                    setState(() {});
+                  },
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        habit.title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (habit.startTime != null && habit.endTime != null)
+                        Text(
+                          '${TimeOfDay.fromDateTime(habit.startTime!).format(context)} - ${TimeOfDay.fromDateTime(habit.endTime!).format(context)}',
+                          style: const TextStyle(
+                              fontSize: 11, color: Colors.black54),
+                        ),
+                      Text(
+                        'Habit - ${habit.getFrequencyDisplay()}',
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.repeat, size: 16, color: Colors.black54),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
