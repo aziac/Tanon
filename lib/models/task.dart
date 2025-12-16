@@ -8,6 +8,8 @@ class Task {
   final DateTime? endTime;
   final DateTime createdAt;
   final DateTime? completedAt;
+  final bool notifyAtStart;
+  final bool notifyAtEnd;
   List<String>? tagIds;
 
   Task({
@@ -20,6 +22,8 @@ class Task {
     this.endTime,
     required this.createdAt,
     this.completedAt,
+    this.notifyAtStart = false,
+    this.notifyAtEnd = false,
     this.tagIds,
   });
 
@@ -34,6 +38,8 @@ class Task {
       'end_time': endTime?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'completed_at': completedAt?.toIso8601String(),
+      'notify_at_start': notifyAtStart ? 1 : 0,
+      'notify_at_end': notifyAtEnd ? 1 : 0,
     };
   }
 
@@ -51,6 +57,8 @@ class Task {
       completedAt: map['completed_at'] != null
           ? DateTime.parse(map['completed_at'])
           : null,
+      notifyAtStart: map['notify_at_start'] == 1,
+      notifyAtEnd: map['notify_at_end'] == 1,
     );
   }
 
@@ -64,6 +72,8 @@ class Task {
     DateTime? endTime,
     DateTime? createdAt,
     DateTime? completedAt,
+    bool? notifyAtStart,
+    bool? notifyAtEnd,
     List<String>? tagIds,
   }) {
     return Task(
@@ -76,6 +86,8 @@ class Task {
       endTime: endTime ?? this.endTime,
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
+      notifyAtStart: notifyAtStart ?? this.notifyAtStart,
+      notifyAtEnd: notifyAtEnd ?? this.notifyAtEnd,
       tagIds: tagIds ?? this.tagIds,
     );
   }

@@ -6,6 +6,8 @@ class Habit {
   final DateTime? startTime;
   final DateTime? endTime;
   final DateTime createdAt;
+  final bool notifyAtStart;
+  final bool notifyAtEnd;
   List<String>? tagIds;
 
   Habit({
@@ -16,6 +18,8 @@ class Habit {
     this.startTime,
     this.endTime,
     required this.createdAt,
+    this.notifyAtStart = false,
+    this.notifyAtEnd = false,
     this.tagIds,
   });
 
@@ -29,6 +33,8 @@ class Habit {
       'created_at': createdAt.toIso8601String(),
       'start_time': startTime?.toIso8601String(),
       'end_time': endTime?.toIso8601String(),
+      'notify_at_start': notifyAtStart ? 1 : 0,
+      'notify_at_end': notifyAtEnd ? 1 : 0,
     };
   }
 
@@ -38,16 +44,19 @@ class Habit {
 
     // Handle migration from old format (daily/weekly) to new format (comma-separated days)
     if (frequencyStr == 'daily') {
-      selectedDays = [0, 1, 2, 3, 4, 5, 6];
+      selectedDays = [0, 1, 2, 3, 4, 5, 6]; // All days
     } else if (frequencyStr == 'weekly') {
-      selectedDays = [1, 2, 3, 4, 5];
+      // Default to weekdays for old "weekly" habits
+      selectedDays = [1, 2, 3, 4, 5]; // Mon-Fri
     } else if (frequencyStr.isEmpty) {
       selectedDays = [];
     } else {
+      // New format: comma-separated day indices
       try {
         selectedDays =
             frequencyStr.split(',').map((e) => int.parse(e.trim())).toList();
       } catch (e) {
+        // If parsing fails, default to all days
         selectedDays = [0, 1, 2, 3, 4, 5, 6];
       }
     }
@@ -61,6 +70,8 @@ class Habit {
           map['start_time'] != null ? DateTime.parse(map['start_time']) : null,
       endTime: map['end_time'] != null ? DateTime.parse(map['end_time']) : null,
       createdAt: DateTime.parse(map['created_at']),
+      notifyAtStart: map['notify_at_start'] == 1,
+      notifyAtEnd: map['notify_at_end'] == 1,
     );
   }
 
@@ -72,6 +83,8 @@ class Habit {
     DateTime? startTime,
     DateTime? endTime,
     DateTime? createdAt,
+    bool? notifyAtStart,
+    bool? notifyAtEnd,
     List<String>? tagIds,
   }) {
     return Habit(
@@ -82,6 +95,8 @@ class Habit {
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       createdAt: createdAt ?? this.createdAt,
+      notifyAtStart: notifyAtStart ?? this.notifyAtStart,
+      notifyAtEnd: notifyAtEnd ?? this.notifyAtEnd,
       tagIds: tagIds ?? this.tagIds,
     );
   }

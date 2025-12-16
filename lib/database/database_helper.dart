@@ -19,8 +19,7 @@ class DatabaseHelper {
     final path = join(dbPath.path, filePath);
     return await openDatabase(
       path,
-      // Increment version to trigger migration
-      version: 2,
+      version: 3, // Increment version for notification columns
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -31,6 +30,17 @@ class DatabaseHelper {
       // Add start_time and end_time columns to habits table
       await db.execute('ALTER TABLE habits ADD COLUMN start_time TEXT');
       await db.execute('ALTER TABLE habits ADD COLUMN end_time TEXT');
+    }
+    if (oldVersion < 3) {
+      // Add notification columns
+      await db.execute(
+          'ALTER TABLE tasks ADD COLUMN notify_at_start INTEGER DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE tasks ADD COLUMN notify_at_end INTEGER DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE habits ADD COLUMN notify_at_start INTEGER DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE habits ADD COLUMN notify_at_end INTEGER DEFAULT 0');
     }
   }
 
@@ -63,7 +73,9 @@ class DatabaseHelper {
         start_time TEXT,
         end_time TEXT,
         created_at $textType,
-        completed_at TEXT
+        completed_at TEXT,
+        notify_at_start $boolType DEFAULT 0,
+        notify_at_end $boolType DEFAULT 0
       )
     ''');
 
@@ -77,7 +89,9 @@ class DatabaseHelper {
         target_days $intType,
         start_time TEXT,
         end_time TEXT,
-        created_at $textType
+        created_at $textType,
+        notify_at_start $boolType DEFAULT 0,
+        notify_at_end $boolType DEFAULT 0
       )
     ''');
 
@@ -91,7 +105,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Task-Tag relationship
+    // Task-Tag relationship (many-to-many)
     await db.execute('''
       CREATE TABLE task_tags (
         task_id $textType,
@@ -102,7 +116,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Habit-Tag relationship
+    // Habit-Tag relationship (many-to-many)
     await db.execute('''
       CREATE TABLE habit_tags (
         habit_id $textType,

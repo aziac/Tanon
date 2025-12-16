@@ -4,6 +4,7 @@ import '../models/task.dart';
 import '../models/tag.dart';
 import '../repositories/task_repository.dart';
 import '../repositories/tag_repository.dart';
+import '../services/notification_service.dart';
 import '../theme/win95_theme.dart';
 import '../widgets/win95_widgets.dart';
 
@@ -17,6 +18,7 @@ class TasksScreen extends StatefulWidget {
 class _TasksScreenState extends State<TasksScreen> {
   final TaskRepository _taskRepo = TaskRepository();
   final TagRepository _tagRepo = TagRepository();
+  final NotificationService _notificationService = NotificationService();
   final _uuid = const Uuid();
 
   List<Task> _tasks = [];
@@ -58,6 +60,8 @@ class _TasksScreenState extends State<TasksScreen> {
         ? TimeOfDay.fromDateTime(existingTask!.endTime!)
         : null;
     final selectedTags = existingTask?.tagIds?.toSet() ?? <String>{};
+    bool notifyAtStart = existingTask?.notifyAtStart ?? false;
+    bool notifyAtEnd = existingTask?.notifyAtEnd ?? false;
 
     showDialog(
       context: context,
@@ -176,6 +180,24 @@ class _TasksScreenState extends State<TasksScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
+                    if (startTime != null)
+                      Win95Checkbox(
+                        value: notifyAtStart,
+                        onChanged: (val) =>
+                            setDialogState(() => notifyAtStart = val ?? false),
+                        label: const Text('Notify at start time'),
+                      ),
+                    if (endTime != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Win95Checkbox(
+                          value: notifyAtEnd,
+                          onChanged: (val) =>
+                              setDialogState(() => notifyAtEnd = val ?? false),
+                          label: const Text('Notify at end time'),
+                        ),
+                      ),
+                    const SizedBox(height: 12),
                     const Text('Tags:'),
                     const SizedBox(height: 4),
                     Win95Panel(
@@ -262,6 +284,8 @@ class _TasksScreenState extends State<TasksScreen> {
                                 createdAt:
                                     existingTask?.createdAt ?? DateTime.now(),
                                 completedAt: existingTask?.completedAt,
+                                notifyAtStart: notifyAtStart,
+                                notifyAtEnd: notifyAtEnd,
                                 tagIds: selectedTags.toList(),
                               );
 
@@ -270,6 +294,10 @@ class _TasksScreenState extends State<TasksScreen> {
                               } else {
                                 await _taskRepo.update(task);
                               }
+
+                              // Schedule notifications
+                              await _notificationService
+                                  .scheduleTaskNotifications(task);
 
                               Navigator.pop(context);
                               _loadData();

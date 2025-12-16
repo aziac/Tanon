@@ -4,6 +4,7 @@ import '../models/habit.dart';
 import '../models/tag.dart';
 import '../repositories/habit_repository.dart';
 import '../repositories/tag_repository.dart';
+import '../services/notification_service.dart';
 import '../theme/win95_theme.dart';
 import '../widgets/win95_widgets.dart';
 
@@ -17,6 +18,7 @@ class HabitsScreen extends StatefulWidget {
 class _HabitsScreenState extends State<HabitsScreen> {
   final HabitRepository _habitRepo = HabitRepository();
   final TagRepository _tagRepo = TagRepository();
+  final NotificationService _notificationService = NotificationService();
   final _uuid = const Uuid();
 
   List<Habit> _habits = [];
@@ -48,6 +50,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
     TimeOfDay? endTime = existingHabit?.endTime != null
         ? TimeOfDay.fromDateTime(existingHabit!.endTime!)
         : null;
+    bool notifyAtStart = existingHabit?.notifyAtStart ?? false;
+    bool notifyAtEnd = existingHabit?.notifyAtEnd ?? false;
 
     showDialog(
       context: context,
@@ -132,6 +136,24 @@ class _HabitsScreenState extends State<HabitsScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    if (startTime != null)
+                      Win95Checkbox(
+                        value: notifyAtStart,
+                        onChanged: (val) =>
+                            setDialogState(() => notifyAtStart = val ?? false),
+                        label: const Text('Notify at start time'),
+                      ),
+                    if (endTime != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Win95Checkbox(
+                          value: notifyAtEnd,
+                          onChanged: (val) =>
+                              setDialogState(() => notifyAtEnd = val ?? false),
+                          label: const Text('Notify at end time'),
+                        ),
+                      ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -233,7 +255,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                             if (titleController.text.isNotEmpty &&
                                 selectedDays.isNotEmpty) {
                               DateTime? start, end;
-                              // Create if times are set
+                              // Create DateTime from TimeOfDay if times are set
                               if (startTime != null) {
                                 final now = DateTime.now();
                                 start = DateTime(now.year, now.month, now.day,
@@ -256,6 +278,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
                                 endTime: end,
                                 createdAt:
                                     existingHabit?.createdAt ?? DateTime.now(),
+                                notifyAtStart: notifyAtStart,
+                                notifyAtEnd: notifyAtEnd,
                                 tagIds: selectedTags.toList(),
                               );
 
@@ -264,6 +288,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
                               } else {
                                 await _habitRepo.update(habit);
                               }
+
+                              // Schedule notifications for today
+                              await _notificationService
+                                  .scheduleHabitNotifications(
+                                      habit, DateTime.now());
 
                               Navigator.pop(context);
                               _loadHabits();
@@ -443,10 +472,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
                                                       createdAt:
                                                           DateTime.now()),
                                                 );
-                                                if (tag.id.isEmpty) {
+                                                if (tag.id.isEmpty)
                                                   return const SizedBox
                                                       .shrink();
-                                                }
 
                                                 final tagColor = tag.color !=
                                                         null

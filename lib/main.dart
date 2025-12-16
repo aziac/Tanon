@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'theme/win95_theme.dart';
 import 'screens/main_screen.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+  await notificationService.requestPermissions();
+
   runApp(const MyApp());
 }
 
