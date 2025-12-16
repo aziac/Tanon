@@ -68,215 +68,219 @@ class _TasksScreenState extends State<TasksScreen> {
             padding: const EdgeInsets.all(16),
             child: SizedBox(
               width: 400,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(existingTask == null ? 'New Task' : 'Edit Task',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  const Text('Title:'),
-                  const SizedBox(height: 4),
-                  Win95TextField(controller: titleController),
-                  const SizedBox(height: 12),
-                  const Text('Description:'),
-                  const SizedBox(height: 4),
-                  Win95TextField(controller: descController, maxLines: 3),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Due Date:'),
-                            const SizedBox(height: 4),
-                            Win95Button(
-                              onPressed: () async {
-                                final date = await showDialog<DateTime>(
-                                  context: context,
-                                  builder: (context) => Win95DatePicker(
-                                    initialDate: selectedDate ?? DateTime.now(),
-                                    firstDate: DateTime(2000),
-                                    lastDate: DateTime(2100),
-                                  ),
-                                );
-                                if (date != null) {
-                                  setDialogState(() => selectedDate = date);
-                                }
-                              },
-                              child: Text(selectedDate == null
-                                  ? 'Select Date'
-                                  : '${selectedDate!.month}/${selectedDate!.day}/${selectedDate!.year}'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Start Time:'),
-                            const SizedBox(height: 4),
-                            Win95Button(
-                              onPressed: () async {
-                                final time = await showDialog<TimeOfDay>(
-                                  context: context,
-                                  builder: (context) => Win95TimePicker(
-                                    initialTime: startTime ?? TimeOfDay.now(),
-                                  ),
-                                );
-                                if (time != null) {
-                                  setDialogState(() => startTime = time);
-                                }
-                              },
-                              child: Text(startTime == null
-                                  ? 'Select'
-                                  : startTime!.format(context)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('End Time:'),
-                            const SizedBox(height: 4),
-                            Win95Button(
-                              onPressed: () async {
-                                final time = await showDialog<TimeOfDay>(
-                                  context: context,
-                                  builder: (context) => Win95TimePicker(
-                                    initialTime:
-                                        endTime ?? startTime ?? TimeOfDay.now(),
-                                  ),
-                                );
-                                if (time != null) {
-                                  setDialogState(() => endTime = time);
-                                }
-                              },
-                              child: Text(endTime == null
-                                  ? 'Select'
-                                  : endTime!.format(context)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('Tags:'),
-                  const SizedBox(height: 4),
-                  Win95Panel(
-                    inset: true,
-                    child: SizedBox(
-                      height: 100,
-                      child: ListView(
-                        children: _allTags.map((tag) {
-                          final isSelected = selectedTags.contains(tag.id);
-                          return Win95Checkbox(
-                            value: isSelected,
-                            onChanged: (val) {
-                              setDialogState(() {
-                                if (val == true) {
-                                  selectedTags.add(tag.id);
-                                  // Auto-select parent tags
-                                  String? currentParentId = tag.parentId;
-                                  while (currentParentId != null) {
-                                    selectedTags.add(currentParentId);
-                                    final parent = _allTags.firstWhere(
-                                      (t) => t.id == currentParentId,
-                                      orElse: () => Tag(
-                                        id: '',
-                                        name: '',
-                                        createdAt: DateTime.now(),
-                                      ),
-                                    );
-                                    if (parent.id.isEmpty) break;
-                                    currentParentId = parent.parentId;
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(existingTask == null ? 'New Task' : 'Edit Task',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    const Text('Title:'),
+                    const SizedBox(height: 4),
+                    Win95TextField(controller: titleController),
+                    const SizedBox(height: 12),
+                    const Text('Description:'),
+                    const SizedBox(height: 4),
+                    Win95TextField(controller: descController, maxLines: 3),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Due Date:'),
+                              const SizedBox(height: 4),
+                              Win95Button(
+                                onPressed: () async {
+                                  final date = await showDialog<DateTime>(
+                                    context: context,
+                                    builder: (context) => Win95DatePicker(
+                                      initialDate:
+                                          selectedDate ?? DateTime.now(),
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime(2100),
+                                    ),
+                                  );
+                                  if (date != null) {
+                                    setDialogState(() => selectedDate = date);
                                   }
-                                } else {
-                                  selectedTags.remove(tag.id);
-                                }
-                              });
-                            },
-                            label: Text(tag.name),
-                          );
-                        }).toList(),
+                                },
+                                child: Text(selectedDate == null
+                                    ? 'Select Date'
+                                    : '${selectedDate!.month}/${selectedDate!.day}/${selectedDate!.year}'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Start Time:'),
+                              const SizedBox(height: 4),
+                              Win95Button(
+                                onPressed: () async {
+                                  final time = await showDialog<TimeOfDay>(
+                                    context: context,
+                                    builder: (context) => Win95TimePicker(
+                                      initialTime: startTime ?? TimeOfDay.now(),
+                                    ),
+                                  );
+                                  if (time != null) {
+                                    setDialogState(() => startTime = time);
+                                  }
+                                },
+                                child: Text(startTime == null
+                                    ? 'Select'
+                                    : startTime!.format(context)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('End Time:'),
+                              const SizedBox(height: 4),
+                              Win95Button(
+                                onPressed: () async {
+                                  final time = await showDialog<TimeOfDay>(
+                                    context: context,
+                                    builder: (context) => Win95TimePicker(
+                                      initialTime: endTime ??
+                                          startTime ??
+                                          TimeOfDay.now(),
+                                    ),
+                                  );
+                                  if (time != null) {
+                                    setDialogState(() => endTime = time);
+                                  }
+                                },
+                                child: Text(endTime == null
+                                    ? 'Select'
+                                    : endTime!.format(context)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Tags:'),
+                    const SizedBox(height: 4),
+                    Win95Panel(
+                      inset: true,
+                      child: SizedBox(
+                        height: 100,
+                        child: ListView(
+                          children: _allTags.map((tag) {
+                            final isSelected = selectedTags.contains(tag.id);
+                            return Win95Checkbox(
+                              value: isSelected,
+                              onChanged: (val) {
+                                setDialogState(() {
+                                  if (val == true) {
+                                    selectedTags.add(tag.id);
+                                    // Auto-select parent tags
+                                    String? currentParentId = tag.parentId;
+                                    while (currentParentId != null) {
+                                      selectedTags.add(currentParentId);
+                                      final parent = _allTags.firstWhere(
+                                        (t) => t.id == currentParentId,
+                                        orElse: () => Tag(
+                                          id: '',
+                                          name: '',
+                                          createdAt: DateTime.now(),
+                                        ),
+                                      );
+                                      if (parent.id.isEmpty) break;
+                                      currentParentId = parent.parentId;
+                                    }
+                                  } else {
+                                    selectedTags.remove(tag.id);
+                                  }
+                                });
+                              },
+                              label: Text(tag.name),
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Win95Button(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 8),
-                      Win95Button(
-                        onPressed: () async {
-                          if (titleController.text.isNotEmpty) {
-                            DateTime? start, end;
-                            if (selectedDate != null && startTime != null) {
-                              start = DateTime(
-                                selectedDate!.year,
-                                selectedDate!.month,
-                                selectedDate!.day,
-                                startTime!.hour,
-                                startTime!.minute,
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Win95Button(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        Win95Button(
+                          onPressed: () async {
+                            if (titleController.text.isNotEmpty) {
+                              DateTime? start, end;
+                              if (selectedDate != null && startTime != null) {
+                                start = DateTime(
+                                  selectedDate!.year,
+                                  selectedDate!.month,
+                                  selectedDate!.day,
+                                  startTime!.hour,
+                                  startTime!.minute,
+                                );
+                              }
+                              if (selectedDate != null && endTime != null) {
+                                end = DateTime(
+                                  selectedDate!.year,
+                                  selectedDate!.month,
+                                  selectedDate!.day,
+                                  endTime!.hour,
+                                  endTime!.minute,
+                                );
+                              }
+
+                              final task = Task(
+                                id: existingTask?.id ?? _uuid.v4(),
+                                title: titleController.text,
+                                description: descController.text.isEmpty
+                                    ? null
+                                    : descController.text,
+                                isCompleted: existingTask?.isCompleted ?? false,
+                                dueDate: selectedDate,
+                                startTime: start,
+                                endTime: end,
+                                createdAt:
+                                    existingTask?.createdAt ?? DateTime.now(),
+                                completedAt: existingTask?.completedAt,
+                                tagIds: selectedTags.toList(),
                               );
-                            }
-                            if (selectedDate != null && endTime != null) {
-                              end = DateTime(
-                                selectedDate!.year,
-                                selectedDate!.month,
-                                selectedDate!.day,
-                                endTime!.hour,
-                                endTime!.minute,
-                              );
-                            }
 
-                            final task = Task(
-                              id: existingTask?.id ?? _uuid.v4(),
-                              title: titleController.text,
-                              description: descController.text.isEmpty
-                                  ? null
-                                  : descController.text,
-                              isCompleted: existingTask?.isCompleted ?? false,
-                              dueDate: selectedDate,
-                              startTime: start,
-                              endTime: end,
-                              createdAt:
-                                  existingTask?.createdAt ?? DateTime.now(),
-                              completedAt: existingTask?.completedAt,
-                              tagIds: selectedTags.toList(),
-                            );
+                              if (existingTask == null) {
+                                await _taskRepo.create(task);
+                              } else {
+                                await _taskRepo.update(task);
+                              }
 
-                            if (existingTask == null) {
-                              await _taskRepo.create(task);
-                            } else {
-                              await _taskRepo.update(task);
+                              Navigator.pop(context);
+                              _loadData();
                             }
-
-                            Navigator.pop(context);
-                            _loadData();
-                          }
-                        },
-                        child: Text(existingTask == null ? 'Create' : 'Save'),
-                      ),
-                    ],
-                  ),
-                ],
+                          },
+                          child: Text(existingTask == null ? 'Create' : 'Save'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -403,9 +407,8 @@ class _TasksScreenState extends State<TasksScreen> {
                                                   name: 'Unknown',
                                                   createdAt: DateTime.now()),
                                             );
-                                            if (tag.id.isEmpty) {
+                                            if (tag.id.isEmpty)
                                               return const SizedBox.shrink();
-                                            }
 
                                             final tagColor = tag.color != null
                                                 ? Color(int.parse(
